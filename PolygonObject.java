@@ -32,7 +32,7 @@ public class PolygonObject {
 	{
 		if(draw && visible)
 		{
-			g.setColor(new Color((int)(c.getRed() * lighting), (int)(c.getGreen() * lighting), (int)(c.getBlue() * lighting)));
+			g.setColor(new Color((int)(c.getRed() * lighting), (int)(c.getGreen() * lighting), (int)(c.getBlue() * lighting))); // shadow scaling
 			if(seeThrough)
 				g.drawPolygon(P);
 			else

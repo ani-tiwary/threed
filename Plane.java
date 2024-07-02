@@ -1,5 +1,5 @@
 public class Plane {
-	Vector V1, V2, NV;
+	Vector V1, V2, NV; // defining vectors and normal vector
 	double[] P = new double[3];
 	public Plane(DPolygon DP)
 	{

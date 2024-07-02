@@ -42,7 +42,7 @@ public class Screen extends JPanel implements KeyListener, MouseListener, MouseM
 
 	int[] BlueMonday; // NewOrder haha get it
 
-	static boolean OutLines = true;
+	static boolean OutLines = false;
 	boolean[] Keys = new boolean[4];
 	
 	long repaintTime = 0;
@@ -60,13 +60,13 @@ public class Screen extends JPanel implements KeyListener, MouseListener, MouseM
 		new GenerateTerrain();
 		
 		//spinny
-		Cubes.add(new Cube(0, -5, 0, 2, 2, 2, Color.red));
-		Prisms.add(new Prism(6, -5, 0, 2, 2, 2, Color.green));
-		Pyramids.add(new Pyramid(12, -5, 0, 2, 2, 2, Color.blue));
+		Cubes.add(new Cube(40, 105, 0, 2, 2, 2, Color.red));
+		Prisms.add(new Prism(46, 105, 0, 2, 2, 2, Color.green));
+		Pyramids.add(new Pyramid(52, 105, 0, 2, 2, 2, Color.blue));
 
 		//twin towers
-		Cubes.add(new Cube(20, -5, 0, 2, 2, 12, Color.gray));
-		Pyramids.add(new Pyramid(20, -5, 12, 2, 2, 2, Color.gray));
+		Cubes.add(new Cube(60, 105, 0, 2, 2, 12, Color.gray));
+		Pyramids.add(new Pyramid(60, 105, 12, 2, 2, 2, Color.gray));
 		
 	}	
 	
@@ -81,11 +81,11 @@ public class Screen extends JPanel implements KeyListener, MouseListener, MouseM
 
 		ControlSunAndLight();
 
-		//Updates each polygon for this camera position
+		//updates each shape for position
 		for(int i = 0; i < DPolygons.size(); i++)
 			DPolygons.get(i).updatePolygon();
 		
-		//rotate and update shape examples
+		//make first of each spin
 		Cubes.get(0).rotation+=.01;
 		Cubes.get(0).updatePoly();
 
@@ -339,7 +339,7 @@ public class Screen extends JPanel implements KeyListener, MouseListener, MouseM
 	public void mouseExited(MouseEvent arg0) {
 	}
 
-	public void mousePressed(MouseEvent arg0) {
+	public void mousePressed(MouseEvent arg0) { // nom nom nom
 		if(arg0.getButton() == MouseEvent.BUTTON1)
 			if(PolygonOver != null)
 				PolygonOver.seeThrough = false;

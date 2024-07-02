@@ -47,10 +47,8 @@ public class DPolygon {
 	void calcLighting()
 	{
 		Plane lightingPlane = new Plane(this);
-		double angle = Math.acos(((lightingPlane.NV.x * Screen.LightDir[0]) + 
-			  (lightingPlane.NV.y * Screen.LightDir[1]) + (lightingPlane.NV.z * Screen.LightDir[2]))
-			  /(Math.sqrt(Screen.LightDir[0] * Screen.LightDir[0] + Screen.LightDir[1] * Screen.LightDir[1] + Screen.LightDir[2] * Screen.LightDir[2])));
-		
+		double angle = Math.acos(((lightingPlane.NV.x * Screen.LightDir[0]) + (lightingPlane.NV.y * Screen.LightDir[1]) + (lightingPlane.NV.z * Screen.LightDir[2])) /(Math.sqrt(Screen.LightDir[0] * Screen.LightDir[0] + Screen.LightDir[1] * Screen.LightDir[1] + Screen.LightDir[2] * Screen.LightDir[2])));
+		// above is dot product to find intensity of light from source
 		DrawablePolygon.lighting = 0.2 + 1 - Math.sqrt(Math.toDegrees(angle)/180);
 
 		if(DrawablePolygon.lighting > 1)

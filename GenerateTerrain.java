@@ -4,9 +4,9 @@ import java.util.Random;
 public class GenerateTerrain {
 
     Random r;
-    static double roughness = 1.5;
+    static double roughness = 3;
     static int mapSize = 50;
-	static double Size = 2;
+	static double Size = 4;
 	static Color G = new Color(60, 50, 50);
     // static Color G = new Color(120, 100, 80);
 

@@ -42,7 +42,6 @@ public class Calculator {
 			xRot = -xRot;
 		if(ViewFrom[0]<ViewTo[0])
 			yRot = -yRot;
-
 			Vector V = new Vector(xRot, yRot, 0);
 		return V;
 	}

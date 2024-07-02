@@ -44,8 +44,6 @@ public class Prism {
 		
 		if(xdif<0)
 			angle[0] += Math.PI;
-		
-/////////
 		xdif = width + 0.00001;
 		ydif = - length + 0.00001;
 		
@@ -53,7 +51,6 @@ public class Prism {
 		
 		if(xdif<0)
 			angle[1] += Math.PI;
-/////////
 		xdif = width + 0.00001;
 		ydif = length + 0.00001;
 		
@@ -61,8 +58,6 @@ public class Prism {
 		
 		if(xdif<0)
 			angle[2] += Math.PI;
-		
-/////////
 		xdif = - width + 0.00001;
 		ydif = length + 0.00001;
 		
@@ -70,8 +65,6 @@ public class Prism {
 		
 		if(xdif<0)
 			angle[3] += Math.PI;		
-		
-/////////
 		xdif = - width + 0.00001;
 		ydif = 0.00001;
 		
@@ -79,8 +72,6 @@ public class Prism {
 		
 		if(xdif<0)
 			angle[4] += Math.PI;		
-
-/////////
 		xdif = + width + 0.00001;
 		ydif = 0.00001;
 		
@@ -96,21 +87,16 @@ public class Prism {
 		RotAdd[4] = angle[4] + 0.25 * Math.PI;
 		RotAdd[5] = angle[5] + 0.25 * Math.PI;
 	}
-	
 	void UpdateDirection(double toX, double toY)
 	{
 		double xdif = toX - (x + width/2) + 0.00001;
 		double ydif = toY - (y + length/2) + 0.00001;
-		
-		double anglet = Math.atan(ydif/xdif) + 0.75 * Math.PI;
-
+		double angle = Math.atan(ydif/xdif) + 0.75 * Math.PI;
 		if(xdif<0)
-			anglet += Math.PI;
-
-		rotation = anglet;
+			angle += Math.PI;
+		rotation = angle;
 		updatePoly();		
 	}
-
 	void updatePoly()
 	{
 		for(int i = 0; i < 5; i++)
@@ -121,20 +107,19 @@ public class Prism {
 		
 		double radius = Math.sqrt(width*width + length*length);
 		double innerRadius = Math.sqrt(width*width);
-		
-			   x1 = x+width*0.5+radius*0.5*Math.cos(rotation + RotAdd[0]);
-			   x2 = x+width*0.5+radius*0.5*Math.cos(rotation + RotAdd[1]);
-			   x3 = x+width*0.5+radius*0.5*Math.cos(rotation + RotAdd[2]);
-			   x4 = x+width*0.5+radius*0.5*Math.cos(rotation + RotAdd[3]);
-			   x5 = x+width*0.5+innerRadius*0.5*Math.cos(rotation + RotAdd[4]);
-			   x6 = x+width*0.5+innerRadius*0.5*Math.cos(rotation + RotAdd[5]);
-			   
-			   y1 = y+length*0.5+radius*0.5*Math.sin(rotation + RotAdd[0]);
-			   y2 = y+length*0.5+radius*0.5*Math.sin(rotation + RotAdd[1]);
-			   y3 = y+length*0.5+radius*0.5*Math.sin(rotation + RotAdd[2]);
-			   y4 = y+length*0.5+radius*0.5*Math.sin(rotation + RotAdd[3]);
-			   y5 = y+length*0.5+innerRadius*0.5*Math.sin(rotation + RotAdd[4]);
-			   y6 = y+length*0.5+innerRadius*0.5*Math.sin(rotation + RotAdd[5]);
+            x1 = x+width*0.5+radius*0.5*Math.cos(rotation + RotAdd[0]);
+            x2 = x+width*0.5+radius*0.5*Math.cos(rotation + RotAdd[1]);
+            x3 = x+width*0.5+radius*0.5*Math.cos(rotation + RotAdd[2]);
+            x4 = x+width*0.5+radius*0.5*Math.cos(rotation + RotAdd[3]);
+            x5 = x+width*0.5+innerRadius*0.5*Math.cos(rotation + RotAdd[4]);
+            x6 = x+width*0.5+innerRadius*0.5*Math.cos(rotation + RotAdd[5]);
+            
+            y1 = y+length*0.5+radius*0.5*Math.sin(rotation + RotAdd[0]);
+            y2 = y+length*0.5+radius*0.5*Math.sin(rotation + RotAdd[1]);
+            y3 = y+length*0.5+radius*0.5*Math.sin(rotation + RotAdd[2]);
+            y4 = y+length*0.5+radius*0.5*Math.sin(rotation + RotAdd[3]);
+            y5 = y+length*0.5+innerRadius*0.5*Math.sin(rotation + RotAdd[4]);
+            y6 = y+length*0.5+innerRadius*0.5*Math.sin(rotation + RotAdd[5]);
    
 		Polys[0].x = new double[]{x1, x2, x3, x4};
 		Polys[0].y = new double[]{y1, y2, y3, y4};
