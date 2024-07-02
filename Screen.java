@@ -8,11 +8,12 @@ import javax.swing.JPanel;
 public class Screen extends JPanel implements KeyListener{
 	double SleepTime = 1000/30, lastRefresh = 0;
 	static double[] ViewFrom = new double[] {10, 10, 10};
-	static double[] ViewTo = new double[] {5, 0, 0};
+	static double[] ViewTo = new double[] {1, 1, 1.5};
 	static int NumberOfPolygons = 0, NumberOf3DPolygons = 0;
 	static PolygonObject[] DrawablePolygons = new PolygonObject[100];
 	static DPolygon[] DPolygons = new DPolygon[100];
 	int[] NewOrder;
+	boolean[] Keys = new boolean[8];
 	
 	public Screen()
 	{
@@ -24,12 +25,16 @@ public class Screen extends JPanel implements KeyListener{
 		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{0, 2, 2, 0}, new double[]{2, 2, 2, 2},  new double[]{0, 0, 3, 3}, Color.gray);
 		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{0, 0, 0, 0}, new double[]{0, 2, 2, 0},  new double[]{0, 0, 3, 3}, Color.gray);
 		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{2, 2, 2, 2}, new double[]{0, 2, 2, 0},  new double[]{0, 0, 3, 3}, Color.gray);
+		for(int i = -4; i < 5; i++)
+			for(int j = -4; j < 5; j++)
+				DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{i, i, i + 1, i + 1}, new double[]{j, j + 1, j + 1, j},  new double[]{0, 0, 0, 	0}, Color.green	);
 	}
 	
 	public void paintComponent(Graphics g)
 	{
+		Controls();
+		
 		g.clearRect(0, 0, 2000, 1200);
-		g.drawString(System.currentTimeMillis() + "", 20, 20);
 
 		for(int i = 0; i < NumberOf3DPolygons; i++)
 			DPolygons[i].updatePolygon();
@@ -92,18 +97,90 @@ public class Screen extends JPanel implements KeyListener{
 		}
 	}
 
+	void Controls()
+	{
+		Vector ViewVector = new Vector(ViewTo[0] - ViewFrom[0], ViewTo[1] - ViewFrom[1], ViewTo[2] - ViewFrom[2]);
+		if(Keys[4])
+		{
+			ViewFrom[0] += ViewVector.x;
+			ViewFrom[1] += ViewVector.y;
+			ViewFrom[2] += ViewVector.z;
+			ViewTo[0] += ViewVector.x;
+			ViewTo[1] += ViewVector.y;
+			ViewTo[2] += ViewVector.z;
+		}
+		
+		if(Keys[6])
+		{
+			ViewFrom[0] -= ViewVector.x;
+			ViewFrom[1] -= ViewVector.y;
+			ViewFrom[2] -= ViewVector.z;
+			ViewTo[0] -= ViewVector.x;
+			ViewTo[1] -= ViewVector.y;
+			ViewTo[2] -= ViewVector.z;
+		}
+		
+		Vector VerticalVector = new Vector(0, 0, 1);
+		Vector SideViewVector = ViewVector.CrossProduct(VerticalVector);
+		
+		if(Keys[5])
+		{
+			ViewFrom[0] += SideViewVector.x;
+			ViewFrom[1] += SideViewVector.y;
+			ViewFrom[2] += SideViewVector.z;
+			ViewTo[0] += SideViewVector.x;
+			ViewTo[1] += SideViewVector.y;
+			ViewTo[2] += SideViewVector.z;
+		}
+		
+		if(Keys[7])
+		{
+			ViewFrom[0] -= SideViewVector.x;
+			ViewFrom[1] -= SideViewVector.y;
+			ViewFrom[2] -= SideViewVector.z;
+			ViewTo[0] -= SideViewVector.x;
+			ViewTo[1] -= SideViewVector.y;
+			ViewTo[2] -= SideViewVector.z;
+		}
+	}
+	
 	public void keyPressed(KeyEvent e) {
 		if(e.getKeyCode() == KeyEvent.VK_LEFT)
-			ViewFrom[0] --;
+			Keys[0] = true;
 		if(e.getKeyCode() == KeyEvent.VK_RIGHT)
-			ViewFrom[0] ++;
+			Keys[1] = true;
 		if(e.getKeyCode() == KeyEvent.VK_UP)
-			ViewFrom[1] --;
+			Keys[2] = true;
 		if(e.getKeyCode() == KeyEvent.VK_DOWN)
-			ViewFrom[0] ++;
+			Keys[3] = true;
+		if(e.getKeyCode() == KeyEvent.VK_W)
+			Keys[4] = true;
+		if(e.getKeyCode() == KeyEvent.VK_A)
+			Keys[5] = true;
+		if(e.getKeyCode() == KeyEvent.VK_S)
+			Keys[6] = true;
+		if(e.getKeyCode() == KeyEvent.VK_D)
+			Keys[7] = true;
 	}
 
 	public void keyReleased(KeyEvent e) {
+		if(e.getKeyCode() == KeyEvent.VK_LEFT)
+			Keys[0] = false;
+		if(e.getKeyCode() == KeyEvent.VK_RIGHT)
+			Keys[1] = false;
+		if(e.getKeyCode() == KeyEvent.VK_UP)
+			Keys[2] = false;
+		if(e.getKeyCode() == KeyEvent.VK_DOWN)
+			Keys[3] = false;
+		if(e.getKeyCode() == KeyEvent.VK_W)
+			Keys[4] = false;
+		if(e.getKeyCode() == KeyEvent.VK_A)
+			Keys[5] = false;
+		if(e.getKeyCode() == KeyEvent.VK_S)
+			Keys[6] = false;
+		if(e.getKeyCode() == KeyEvent.VK_D)
+			Keys[7] = false;
+
 	}
 
 	public void keyTyped(KeyEvent e) {

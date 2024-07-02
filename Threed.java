@@ -1,7 +1,12 @@
+
+import java.awt.Dimension;
 import java.awt.Toolkit;
+
 import javax.swing.JFrame;
 
 public class Threed extends JFrame{
+
+	static Dimension ScreenSize = Toolkit.getDefaultToolkit().getScreenSize(); 
 	static JFrame F = new Threed();
 	Screen ScreenObject = new Screen();
 	
@@ -9,7 +14,7 @@ public class Threed extends JFrame{
 	{
 		add(ScreenObject);
 		setUndecorated(true);
-		setSize(Toolkit.getDefaultToolkit().getScreenSize());
+		setSize(ScreenSize);
 		setVisible(true);
 	}
 	
