@@ -47,7 +47,7 @@ public class Calculator {
 		return V;
 	}
 	
-	static void SetPrederterminedInfo()
+	static void SetInfo()
 	{
 		ViewVector = new Vector(Screen.ViewTo[0] - Screen.ViewFrom[0], Screen.ViewTo[1] - Screen.ViewFrom[1], Screen.ViewTo[2] - Screen.ViewFrom[2]);			
 		DirectionVector = new Vector(1, 1, 1);				

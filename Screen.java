@@ -67,18 +67,17 @@ public class Screen extends JPanel implements KeyListener, MouseListener, MouseM
 		//twin towers
 		Cubes.add(new Cube(20, -5, 0, 2, 2, 12, Color.gray));
 		Pyramids.add(new Pyramid(20, -5, 12, 2, 2, 2, Color.gray));
+		
 	}	
 	
 	public void paintComponent(Graphics g)
 	{
-		//Clear screen and draw background color
-		g.setColor(new Color(140, 180, 180));
+		g.setColor(new Color(150, 200, 225));
 		g.fillRect(0, 0, (int)Threed.ScreenSize.getWidth(), (int)Threed.ScreenSize.getHeight());
 
 		CameraMovement();
 		
-		//Calculated all that is general for this camera position
-		Calculator.SetPrederterminedInfo();
+		Calculator.SetInfo();
 
 		ControlSunAndLight();
 
