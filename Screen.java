@@ -1,188 +1,368 @@
+import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
-public class Screen extends JPanel implements KeyListener{
-	double SleepTime = 1000/30, lastRefresh = 0;
-	static double[] ViewFrom = new double[] {10, 10, 10};
-	static double[] ViewTo = new double[] {1, 1, 1.5};
-	static int NumberOfPolygons = 0, NumberOf3DPolygons = 0;
-	static PolygonObject[] DrawablePolygons = new PolygonObject[100];
-	static DPolygon[] DPolygons = new DPolygon[100];
-	int[] NewOrder;
-	boolean[] Keys = new boolean[8];
+public class Screen extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener{
+	
+	//all 3d things have 2d things inside called drawablepolygon
+	static ArrayList<DPolygon> DPolygons = new ArrayList<DPolygon>();
+	
+	static ArrayList<Cube> Cubes = new ArrayList<Cube>();
+	static ArrayList<Prism> Prisms = new ArrayList<Prism>();
+	static ArrayList<Pyramid> Pyramids = new ArrayList<Pyramid>();
+	
+	//The polygon that the mouse is currently over
+	static PolygonObject PolygonOver = null;
+
+	Robot r;
+
+	static double[] ViewFrom = new double[] { 15, 5, 10},	
+					ViewTo = new double[] {0, 0, 0},
+					LightDir = new double[] {1, 1, 1};
+
+	
+	static double zoom = 1000, MinZoom = 500, MaxZoom = 2500, MouseX = 0, MouseY = 0, MovementSpeed = 0.5;
+	double drawFPS = 0, MaxFPS = 1000, SleepTime = 1000.0/MaxFPS, LastRefresh = 0, StartTime = System.currentTimeMillis(), LastFPSCheck = 0, Checks = 0;
+	double VertLook = -0.9, HorLook = 0, aimSight = 4, HorRotSpeed = 900, VertRotSpeed = 2200, SunPos = 0;
+
+	int[] BlueMonday; // NewOrder haha get it
+
+	static boolean OutLines = true;
+	boolean[] Keys = new boolean[4];
+	
+	long repaintTime = 0;
 	
 	public Screen()
-	{
-		addKeyListener(this);
-		setFocusable(true);
-		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{0, 2, 2, 0}, new double[]{0, 0, 2, 2},  new double[]{0, 0, 0, 0}, Color.gray);
-		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{0, 2, 2, 0}, new double[]{0, 0, 2, 2},  new double[]{3, 3, 3, 3}, Color.gray);
-		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{0, 2, 2, 0}, new double[]{0, 0, 0, 0},  new double[]{0, 0, 3, 3}, Color.gray);
-		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{0, 2, 2, 0}, new double[]{2, 2, 2, 2},  new double[]{0, 0, 3, 3}, Color.gray);
-		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{0, 0, 0, 0}, new double[]{0, 2, 2, 0},  new double[]{0, 0, 3, 3}, Color.gray);
-		DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{2, 2, 2, 2}, new double[]{0, 2, 2, 0},  new double[]{0, 0, 3, 3}, Color.gray);
-		for(int i = -4; i < 5; i++)
-			for(int j = -4; j < 5; j++)
-				DPolygons[NumberOf3DPolygons] = new DPolygon(new double[]{i, i, i + 1, i + 1}, new double[]{j, j + 1, j + 1, j},  new double[]{0, 0, 0, 	0}, Color.green	);
-	}
+	{		
+		this.addKeyListener(this);
+		setFocusable(true);		
+		
+		this.addMouseListener(this);
+		this.addMouseMotionListener(this);
+		this.addMouseWheelListener(this);
+		
+		invisibleMouse();	
+		new GenerateTerrain();
+		
+		//spinny
+		Cubes.add(new Cube(0, -5, 0, 2, 2, 2, Color.red));
+		Prisms.add(new Prism(6, -5, 0, 2, 2, 2, Color.green));
+		Pyramids.add(new Pyramid(12, -5, 0, 2, 2, 2, Color.blue));
+
+		//twin towers
+		Cubes.add(new Cube(20, -5, 0, 2, 2, 12, Color.gray));
+		Pyramids.add(new Pyramid(20, -5, 12, 2, 2, 2, Color.gray));
+	}	
 	
 	public void paintComponent(Graphics g)
 	{
-		Controls();
-		
-		g.clearRect(0, 0, 2000, 1200);
+		//Clear screen and draw background color
+		g.setColor(new Color(140, 180, 180));
+		g.fillRect(0, 0, (int)Threed.ScreenSize.getWidth(), (int)Threed.ScreenSize.getHeight());
 
-		for(int i = 0; i < NumberOf3DPolygons; i++)
-			DPolygons[i].updatePolygon();
+		CameraMovement();
 		
+		//Calculated all that is general for this camera position
+		Calculator.SetPrederterminedInfo();
+
+		ControlSunAndLight();
+
+		//Updates each polygon for this camera position
+		for(int i = 0; i < DPolygons.size(); i++)
+			DPolygons.get(i).updatePolygon();
+		
+		//rotate and update shape examples
+		Cubes.get(0).rotation+=.01;
+		Cubes.get(0).updatePoly();
+
+		Prisms.get(0).rotation+=.01;
+		Prisms.get(0).updatePoly();
+		
+		Pyramids.get(0).rotation+=.01;
+		Pyramids.get(0).updatePoly();
+
 		setOrder();
-
-		for(int i = 0; i < NumberOfPolygons; i++)
-			DrawablePolygons[NewOrder[i]].drawPolygon(g);
+		setPolygonOver(); //which poly mouse hovers
+			
+		//draws polys in correct order
+		for(int i = 0; i < BlueMonday.length; i++)
+			DPolygons.get(BlueMonday[i]).DrawablePolygon.drawPolygon(g);
+			
+		drawMouseAim(g);			
+	
+		g.drawString("" + (int)drawFPS, 40, 40);
+		
 		SleepAndRefresh();
 	}
 	
 	void setOrder()
 	{
-		double[] k = new double[NumberOfPolygons];
-		NewOrder = new int[NumberOfPolygons];
+		double[] k = new double[DPolygons.size()];
+		BlueMonday = new int[DPolygons.size()];
 		
-		for(int i = 0; i < NumberOfPolygons; i++)
+		for(int i=0; i<DPolygons.size(); i++)
 		{
-			k[i] = DrawablePolygons[i].AvgDist;	
-			NewOrder[i] = i;
+			k[i] = DPolygons.get(i).AvgDist;
+			BlueMonday[i] = i;
 		}
 		
 	    double temp;
 	    int tempr;	    
 		for (int a = 0; a < k.length-1; a++)
 			for (int b = 0; b < k.length-1; b++)
-				if(k[b] < k[b + 1])
+				if(k[b] < k[b + 1]) //which ones closer
 				{
 					temp = k[b];
-					tempr = NewOrder[b];
-					NewOrder[b] = NewOrder[b + 1];
+					tempr = BlueMonday[b];
+					BlueMonday[b] = BlueMonday[b + 1];
 					k[b] = k[b + 1];
 					   
-					NewOrder[b + 1] = tempr;
+					BlueMonday[b + 1] = tempr;
 					k[b + 1] = temp;
 				}
 	}
-	
-	void SleepAndRefresh()
+		
+	void invisibleMouse()
 	{
-		while(true)
-		{
-			if(System.currentTimeMillis() - lastRefresh > SleepTime)
-			{
-				lastRefresh = System.currentTimeMillis();
-				repaint();
-				break;
-			}
-			else
-			{
-				try 
-				{
-					Thread.sleep((long)(System.currentTimeMillis() - lastRefresh));
-				} 
-				catch (Exception e) 
-				{
-
-				}
-			}
-		}
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		BufferedImage cursorImage = new BufferedImage(1, 1, BufferedImage.TRANSLUCENT); 
+		Cursor invisibleCursor = toolkit.createCustomCursor(cursorImage, new Point(0,0), "InvisibleCursor");        
+		setCursor(invisibleCursor);
+	}
+	
+	void drawMouseAim(Graphics g)
+	{
+		g.setColor(Color.black);
+		g.drawLine((int)(Threed.ScreenSize.getWidth()/2 - aimSight), (int)(Threed.ScreenSize.getHeight()/2), (int)(Threed.ScreenSize.getWidth()/2 + aimSight), (int)(Threed.ScreenSize.getHeight()/2));
+		g.drawLine((int)(Threed.ScreenSize.getWidth()/2), (int)(Threed.ScreenSize.getHeight()/2 - aimSight), (int)(Threed.ScreenSize.getWidth()/2), (int)(Threed.ScreenSize.getHeight()/2 + aimSight));			
 	}
 
-	void Controls()
+	void SleepAndRefresh() 
+	{
+		long timeSLU = (long) (System.currentTimeMillis() - LastRefresh); 
+
+		Checks ++;			
+		if(Checks >= 15)
+		{
+			drawFPS = Checks/((System.currentTimeMillis() - LastFPSCheck)/1000.0);
+			LastFPSCheck = System.currentTimeMillis();
+			Checks = 0;
+		}
+		
+		if(timeSLU < 1000.0/MaxFPS)
+		{
+			try {
+				Thread.sleep((long) (1000.0/MaxFPS - timeSLU));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}	
+		}
+				
+		LastRefresh = System.currentTimeMillis();
+		
+		repaint();
+	}
+	
+	void ControlSunAndLight()
+	{
+		SunPos += 0.005;		
+		double mapSize = GenerateTerrain.mapSize * GenerateTerrain.Size;
+		LightDir[0] = mapSize/2 - (mapSize/2 + Math.cos(SunPos) * mapSize * 10);
+		LightDir[1] = mapSize/2 - (mapSize/2 + Math.sin(SunPos) * mapSize * 10);
+		LightDir[2] = -200;
+	}
+	
+	void CameraMovement()
 	{
 		Vector ViewVector = new Vector(ViewTo[0] - ViewFrom[0], ViewTo[1] - ViewFrom[1], ViewTo[2] - ViewFrom[2]);
-		if(Keys[4])
-		{
-			ViewFrom[0] += ViewVector.x;
-			ViewFrom[1] += ViewVector.y;
-			ViewFrom[2] += ViewVector.z;
-			ViewTo[0] += ViewVector.x;
-			ViewTo[1] += ViewVector.y;
-			ViewTo[2] += ViewVector.z;
-		}
-		
-		if(Keys[6])
-		{
-			ViewFrom[0] -= ViewVector.x;
-			ViewFrom[1] -= ViewVector.y;
-			ViewFrom[2] -= ViewVector.z;
-			ViewTo[0] -= ViewVector.x;
-			ViewTo[1] -= ViewVector.y;
-			ViewTo[2] -= ViewVector.z;
-		}
-		
-		Vector VerticalVector = new Vector(0, 0, 1);
+		double xMove = 0, yMove = 0, zMove = 0;
+		Vector VerticalVector = new Vector (0, 0, 1);
 		Vector SideViewVector = ViewVector.CrossProduct(VerticalVector);
 		
-		if(Keys[5])
+		if(Keys[0])
 		{
-			ViewFrom[0] += SideViewVector.x;
-			ViewFrom[1] += SideViewVector.y;
-			ViewFrom[2] += SideViewVector.z;
-			ViewTo[0] += SideViewVector.x;
-			ViewTo[1] += SideViewVector.y;
-			ViewTo[2] += SideViewVector.z;
+			xMove += ViewVector.x;
+			yMove += ViewVector.y;
+			zMove += ViewVector.z;
+		}
+
+		if(Keys[2])
+		{
+			xMove -= ViewVector.x;
+			yMove -= ViewVector.y;
+			zMove -= ViewVector.z;
+		}
+			
+		if(Keys[1])
+		{
+			xMove += SideViewVector.x;
+			yMove += SideViewVector.y;
+			zMove += SideViewVector.z;
+		}
+
+		if(Keys[3])
+		{
+			xMove -= SideViewVector.x;
+			yMove -= SideViewVector.y;
+			zMove -= SideViewVector.z;
 		}
 		
-		if(Keys[7])
-		{
-			ViewFrom[0] -= SideViewVector.x;
-			ViewFrom[1] -= SideViewVector.y;
-			ViewFrom[2] -= SideViewVector.z;
-			ViewTo[0] -= SideViewVector.x;
-			ViewTo[1] -= SideViewVector.y;
-			ViewTo[2] -= SideViewVector.z;
-		}
+		Vector MoveVector = new Vector(xMove, yMove, zMove);
+		MoveTo(ViewFrom[0] + MoveVector.x * MovementSpeed, ViewFrom[1] + MoveVector.y * MovementSpeed, ViewFrom[2] + MoveVector.z * MovementSpeed);
+	}
+
+	void MoveTo(double x, double y, double z)
+	{
+		ViewFrom[0] = x;
+		ViewFrom[1] = y;
+		ViewFrom[2] = z;
+		updateView();
+	}
+
+	void setPolygonOver()
+	{
+		PolygonOver = null;
+		for(int i = BlueMonday.length-1; i >= 0; i--)
+			if(DPolygons.get(BlueMonday[i]).DrawablePolygon.MouseOver() && DPolygons.get(BlueMonday[i]).draw && DPolygons.get(BlueMonday[i]).DrawablePolygon.visible)
+			{
+				PolygonOver = DPolygons.get(BlueMonday[i]).DrawablePolygon;
+				break;
+			}
+	}
+
+	void MouseMovement(double NewMouseX, double NewMouseY)
+	{		
+			double difX = (NewMouseX - Threed.ScreenSize.getWidth()/2);
+			double difY = (NewMouseY - Threed.ScreenSize.getHeight()/2);
+			difY *= 6 - Math.abs(VertLook) * 5;
+			VertLook -= difY  / VertRotSpeed;
+			
+			/*if(difX > 0){
+				System.out.println("difX is positive");
+			}
+			if(difX < 0){
+				System.out.println("difX is negative");
+			}*/
+
+			HorLook += difX / HorRotSpeed;
+	
+			if(VertLook>0.999)
+				VertLook = 0.999;
+	
+			if(VertLook<-0.999)
+				VertLook = -0.999;
+			
+			updateView();
+	}
+	
+	void updateView()
+	{
+		double r = Math.sqrt(1 - (VertLook * VertLook));
+		ViewTo[0] = ViewFrom[0] + r * Math.cos(HorLook);
+		ViewTo[1] = ViewFrom[1] + r * Math.sin(HorLook);		
+		ViewTo[2] = ViewFrom[2] + VertLook;
+	}
+	
+	void CenterMouse() 
+	{
+			try {
+				r = new Robot();
+				r.mouseMove((int)Threed.ScreenSize.getWidth()/2, (int)Threed.ScreenSize.getHeight()/2);
+			} catch (AWTException e) {
+				e.printStackTrace();
+			}
 	}
 	
 	public void keyPressed(KeyEvent e) {
-		if(e.getKeyCode() == KeyEvent.VK_LEFT)
-			Keys[0] = true;
-		if(e.getKeyCode() == KeyEvent.VK_RIGHT)
-			Keys[1] = true;
-		if(e.getKeyCode() == KeyEvent.VK_UP)
-			Keys[2] = true;
-		if(e.getKeyCode() == KeyEvent.VK_DOWN)
-			Keys[3] = true;
 		if(e.getKeyCode() == KeyEvent.VK_W)
-			Keys[4] = true;
+			Keys[0] = true;
 		if(e.getKeyCode() == KeyEvent.VK_A)
-			Keys[5] = true;
+			Keys[1] = true;
 		if(e.getKeyCode() == KeyEvent.VK_S)
-			Keys[6] = true;
+			Keys[2] = true;
 		if(e.getKeyCode() == KeyEvent.VK_D)
-			Keys[7] = true;
+			Keys[3] = true;
+		if(e.getKeyCode() == KeyEvent.VK_O)
+			OutLines = !OutLines;
+		if(e.getKeyCode() == KeyEvent.VK_ESCAPE)
+			System.exit(0);
 	}
 
 	public void keyReleased(KeyEvent e) {
-		if(e.getKeyCode() == KeyEvent.VK_LEFT)
-			Keys[0] = false;
-		if(e.getKeyCode() == KeyEvent.VK_RIGHT)
-			Keys[1] = false;
-		if(e.getKeyCode() == KeyEvent.VK_UP)
-			Keys[2] = false;
-		if(e.getKeyCode() == KeyEvent.VK_DOWN)
-			Keys[3] = false;
 		if(e.getKeyCode() == KeyEvent.VK_W)
-			Keys[4] = false;
+			Keys[0] = false;
 		if(e.getKeyCode() == KeyEvent.VK_A)
-			Keys[5] = false;
+			Keys[1] = false;
 		if(e.getKeyCode() == KeyEvent.VK_S)
-			Keys[6] = false;
+			Keys[2] = false;
 		if(e.getKeyCode() == KeyEvent.VK_D)
-			Keys[7] = false;
-
+			Keys[3] = false;
 	}
 
 	public void keyTyped(KeyEvent e) {
+	}
+
+	public void mouseDragged(MouseEvent arg0) {
+		MouseMovement(arg0.getX(), arg0.getY());
+		MouseX = arg0.getX();
+		MouseY = arg0.getY();
+		CenterMouse();
+	}
+	
+	public void mouseMoved(MouseEvent arg0) {
+		MouseMovement(arg0.getX(), arg0.getY());
+		MouseX = arg0.getX();
+		MouseY = arg0.getY();
+		CenterMouse();
+	}
+	
+	public void mouseClicked(MouseEvent arg0) {
+	}
+
+	public void mouseEntered(MouseEvent arg0) {
+	}
+
+	public void mouseExited(MouseEvent arg0) {
+	}
+
+	public void mousePressed(MouseEvent arg0) {
+		if(arg0.getButton() == MouseEvent.BUTTON1)
+			if(PolygonOver != null)
+				PolygonOver.seeThrough = false;
+
+		if(arg0.getButton() == MouseEvent.BUTTON3)
+			if(PolygonOver != null)
+				PolygonOver.seeThrough = true;
+	}
+
+	public void mouseReleased(MouseEvent arg0) {
+	}
+
+	public void mouseWheelMoved(MouseWheelEvent arg0) {
+		if(arg0.getUnitsToScroll()>0)
+		{
+			if(zoom > MinZoom)
+				zoom -= 25 * arg0.getUnitsToScroll();
+		}
+		else
+		{
+			if(zoom < MaxZoom)
+				zoom -= 25 * arg0.getUnitsToScroll();
+		}	
 	}
 }

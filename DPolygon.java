@@ -1,61 +1,76 @@
 import java.awt.Color;
-import java.awt.Polygon;
-
 
 public class DPolygon {
 	Color c;
 	double[] x, y, z;
-	int poly = 0;
+	boolean draw = true, seeThrough = false;
+	double[] CalcPos, newX, newY;
+	PolygonObject DrawablePolygon;
+	double AvgDist;
 	
-	public DPolygon(double[] x, double[] y, double[] z, Color c)
+	public DPolygon(double[] x, double[] y,  double[] z, Color c, boolean seeThrough)
 	{
-		Screen.NumberOf3DPolygons++;
 		this.x = x;
 		this.y = y;
-		this.z = z;
+		this.z = z;		
 		this.c = c;
+		this.seeThrough = seeThrough; 
 		createPolygon();
 	}
 	
 	void createPolygon()
 	{
-		poly = Screen.NumberOfPolygons;
- 		Screen.DrawablePolygons[Screen.NumberOfPolygons] = new PolygonObject(new double[]{}, new double[]{}, c);
- 		updatePolygon();
+		DrawablePolygon = new PolygonObject(new double[x.length], new double[x.length], c, Screen.DPolygons.size(), seeThrough);
 	}
 	
 	void updatePolygon()
-	{
-		double dx = - 50 * Calculator.CalculatePositionX(Screen.ViewFrom, Screen.ViewTo, Screen.ViewTo[0], Screen.ViewTo[1], Screen.ViewTo[2]);
-		double dy = - 50 * Calculator.CalculatePositionY(Screen.ViewFrom, Screen.ViewTo, Screen.ViewTo[0], Screen.ViewTo[1], Screen.ViewTo[2]);
-		double[] newX = new double[x.length];
-		double[] newY = new double[x.length];
-		
-		for(int i = 0; i < x.length; i++)
+	{		
+		newX = new double[x.length];
+		newY = new double[x.length];
+		draw = true;
+		for(int i=0; i<x.length; i++)
 		{
-			newX[i] = dx + Threed.ScreenSize.getWidth()/2 + 50 * Calculator.CalculatePositionX(Screen.ViewFrom, Screen.ViewTo, x[i], y[i], z[i]);
-			newY[i] = dy + Threed.ScreenSize.getHeight()/2 + 50 * Calculator.CalculatePositionY(Screen.ViewFrom, Screen.ViewTo, x[i], y[i], z[i]);
+			CalcPos = Calculator.CalculatePositionP(Screen.ViewFrom, Screen.ViewTo, x[i], y[i], z[i]);
+			newX[i] = (Threed.ScreenSize.getWidth()/2 - Calculator.CalcFocusPos[0]) + CalcPos[0] * Screen.zoom;
+			newY[i] = (Threed.ScreenSize.getHeight()/2 - Calculator.CalcFocusPos[1]) + CalcPos[1] * Screen.zoom;			
+			if(Calculator.t < 0)
+				draw = false;
 		}
 		
- 		Screen.DrawablePolygons[poly] = new PolygonObject(newX, newY, c);
- 		Screen.DrawablePolygons[poly].AvgDist = GetDist();
- 		Screen.NumberOfPolygons --;
+		calcLighting();
+		
+		DrawablePolygon.draw = draw;
+		DrawablePolygon.updatePolygon(newX, newY);
+		AvgDist = GetDist();
 	}
 	
+	void calcLighting()
+	{
+		Plane lightingPlane = new Plane(this);
+		double angle = Math.acos(((lightingPlane.NV.x * Screen.LightDir[0]) + 
+			  (lightingPlane.NV.y * Screen.LightDir[1]) + (lightingPlane.NV.z * Screen.LightDir[2]))
+			  /(Math.sqrt(Screen.LightDir[0] * Screen.LightDir[0] + Screen.LightDir[1] * Screen.LightDir[1] + Screen.LightDir[2] * Screen.LightDir[2])));
+		
+		DrawablePolygon.lighting = 0.2 + 1 - Math.sqrt(Math.toDegrees(angle)/180);
+
+		if(DrawablePolygon.lighting > 1)
+			DrawablePolygon.lighting = 1;
+		if(DrawablePolygon.lighting < 0)
+			DrawablePolygon.lighting = 0;
+	}
+		
 	double GetDist()
 	{
-			double total = 0;
-			for(int i = 0; i < x.length; i++)
-				total += GetDistanceToP(i);
-			return total / x.length;
+		double total = 0;
+		for(int i=0; i<x.length; i++)
+			total += GetDistanceToP(i);
+		return total / x.length;
 	}
 	
 	double GetDistanceToP(int i)
 	{
-		
-		return Math.sqrt(
-				(Screen.ViewFrom[0] - x[i])*(Screen.ViewFrom[0] - x[i]) +
-				(Screen.ViewFrom[1] - y[i])*(Screen.ViewFrom[1] - y[i]) +
-				(Screen.ViewFrom[2] - z[i])*(Screen.ViewFrom[2] - z[i]));
+		return Math.sqrt((Screen.ViewFrom[0]-x[i])*(Screen.ViewFrom[0]-x[i]) + 
+						 (Screen.ViewFrom[1]-y[i])*(Screen.ViewFrom[1]-y[i]) +
+						 (Screen.ViewFrom[2]-z[i])*(Screen.ViewFrom[2]-z[i]));
 	}
 }
